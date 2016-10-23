@@ -771,6 +771,14 @@ TEncSearch::xEncSubdivCbfQT( TComDataCU*  pcCU,
   UInt  uiSubdiv        = ( uiTrMode > uiTrDepth ? 1 : 0 );
   UInt  uiLog2TrafoSize = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth()] + 2 - uiFullDepth;
 
+#if 0 //SAMEPAR
+  if (pcCU->getLayerId() != 0) {
+    UInt uiAbsPartIdxBase;
+    TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+    assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == pcCU->getTransformIdx(uiAbsPartIdx));
+  }
+#endif
+  
   if( pcCU->getPredictionMode(0) == MODE_INTRA && pcCU->getPartitionSize(0) == SIZE_NxN && uiTrDepth == 0 )
   {
     assert( uiSubdiv );
@@ -1408,6 +1416,23 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
     bCheckFull    = ( uiLog2TrSize  <= min(maxTuSize,4));
   }
 #endif
+  
+#if 0 //SAMEPAR
+  if (pcCU->getLayerId() != 0) {
+    UInt uiAbsPartIdxBase;
+    TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+    if (uiTrDepth != (int)baseCU->getTransformIdx(uiAbsPartIdxBase)) {
+      //assert(bCheckSplit);
+      bCheckFull = false;
+      bCheckSplit = true;
+    } else {
+      //assert(bCheckFull);
+      bCheckFull = true;
+      bCheckSplit = false;
+    }
+  }
+#endif
+
   Double  dSingleCost   = MAX_DOUBLE;
   UInt    uiSingleDistY = 0;
   UInt    uiSingleDistC = 0;
@@ -4765,9 +4790,25 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
      bCheckFull =  ( uiLog2TrSize <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
   }
 
-  const Bool bCheckSplit  = ( uiLog2TrSize >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
+  Bool bCheckSplit  = ( uiLog2TrSize >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
   
   assert( bCheckFull || bCheckSplit );
+  
+#if 0 //SAMEPAR
+  if (pcCU->getLayerId() != 0) {
+    UInt uiAbsPartIdxBase;
+    TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+    if (uiTrMode != baseCU->getTransformIdx(uiAbsPartIdxBase)) {
+      assert(bCheckSplit);
+      bCheckFull = false;
+      bCheckSplit = true;
+    } else {
+      assert(bCheckFull);
+      bCheckFull = true;
+      bCheckSplit = false;
+    }
+  }
+#endif
   
   Bool  bCodeChroma   = true;
   UInt  uiTrModeC     = uiTrMode;
@@ -5505,6 +5546,14 @@ Void TEncSearch::xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const U
   assert( pcCU->getDepth( 0 ) == pcCU->getDepth( uiAbsPartIdx ) );
   const UInt uiCurrTrMode = uiDepth - pcCU->getDepth( 0 );
   const UInt uiTrMode = pcCU->getTransformIdx( uiAbsPartIdx );
+  
+#if 0 //SAMEPAR
+  if (pcCU->getLayerId() != 0) {
+    UInt uiAbsPartIdxBase;
+    TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+    assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == pcCU->getTransformIdx(uiAbsPartIdx));
+  }
+#endif
   
   const Bool bSubdiv = uiCurrTrMode != uiTrMode;
   

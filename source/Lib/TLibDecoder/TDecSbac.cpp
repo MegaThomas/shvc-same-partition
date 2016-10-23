@@ -513,6 +513,10 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
     return;
   }
   
+#if SAMEPAR
+  if (pcCU->getLayerId() != 0)
+    return;
+#endif
   UInt uiSymbol;
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSplitFlagSCModel.get( 0, 0, pcCU->getCtxSplitFlag( uiAbsPartIdx, uiDepth ) ) );
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
@@ -535,13 +539,24 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
+#if SAMEPAR
+    if (pcCU->getLayerId() != 0) {
+      UInt uiAbsPartIdxBase;
+      TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+      eMode = baseCU->getPartitionSize(uiAbsPartIdxBase);
+//      assert(eMode == baseCU->getPartitionSize(uiAbsPartIdxBase));
+    } else {
+#endif
     uiSymbol = 1;
     if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
     {
       m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 0) );
     }
     eMode = uiSymbol ? SIZE_2Nx2N : SIZE_NxN;
-    UInt uiTrLevel = 0;    
+#if SAMEPAR
+    }
+#endif
+    UInt uiTrLevel = 0;
     UInt uiWidthInBit  = g_aucConvertToBit[pcCU->getWidth(uiAbsPartIdx)]+2;
     UInt uiTrSizeInBit = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxTrSize()]+2;
     uiTrLevel          = uiWidthInBit >= uiTrSizeInBit ? uiWidthInBit - uiTrSizeInBit : 0;
@@ -556,6 +571,14 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
   else
   {
+#if SAMEPAR
+    if (pcCU->getLayerId() != 0) {
+      UInt uiAbsPartIdxBase;
+      TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+      eMode = baseCU->getPartitionSize(uiAbsPartIdxBase);
+      //      assert(eMode == baseCU->getPartitionSize(uiAbsPartIdxBase));
+    } else {
+#endif
     UInt uiMaxNumBits = 2;
     if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( (g_uiMaxCUWidth>>uiDepth) == 8 && (g_uiMaxCUHeight>>uiDepth) == 8 ) )
     {
@@ -593,6 +616,9 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       }
     }
   }
+#if SAMEPAR
+  }
+#endif
   pcCU->setPartSizeSubParts( eMode, uiAbsPartIdx, uiDepth );
   pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
 }

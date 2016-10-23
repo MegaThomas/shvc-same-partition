@@ -38,6 +38,7 @@
 #ifndef _TYPEDEF__
 #define _TYPEDEF__
 
+#define SAMEPAR                          1      // Enhancement layer using the same partition as base layer
 #define SVC_EXTENSION                    1
 
 #if SVC_EXTENSION

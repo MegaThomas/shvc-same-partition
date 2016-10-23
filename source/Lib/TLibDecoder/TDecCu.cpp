@@ -254,7 +254,30 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     bBoundary = true;
   }
   
+#if SAMEPAR
+  Int my_depth;
+  if (pcCU->getLayerId() != 0) {
+    UInt uiAbsPartIdxBase;
+    TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+    my_depth = baseCU->getDepth(uiAbsPartIdxBase);
+    //pcCU->setDepthSubParts( my_depth, uiAbsPartIdx );
+    
+    if (!bBoundary) {
+      if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+        pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx );
+      else if (my_depth > uiDepth)
+        pcCU->setDepthSubParts( uiDepth+1, uiAbsPartIdx );
+      else
+        pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx );
+    }
+  } else {
+    my_depth = pcCU->getDepth(uiAbsPartIdx);
+  }
+  
+  if((( uiDepth < my_depth ) && ( uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )) || bBoundary)
+#else
   if( ( ( uiDepth < pcCU->getDepth( uiAbsPartIdx ) ) && ( uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth ) ) || bBoundary )
+#endif
   {
     UInt uiIdx = uiAbsPartIdx;
     if( (g_uiMaxCUWidth>>uiDepth) == pcCU->getSlice()->getPPS()->getMinCuDQPSize() && pcCU->getSlice()->getPPS()->getUseDQP())
@@ -305,7 +328,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     }
     return;
   }
-  
+
   if( (g_uiMaxCUWidth>>uiDepth) >= pcCU->getSlice()->getPPS()->getMinCuDQPSize() && pcCU->getSlice()->getPPS()->getUseDQP())
   {
     setdQPFlag(true);
@@ -460,6 +483,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   m_ppcYuvResi[uiDepth]->clear();
   
   m_ppcCU[uiDepth]->copySubCU( pcCU, uiAbsPartIdx, uiDepth );
+  assert(m_ppcCU[uiDepth]->getDepth(0) == uiDepth);
   
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {

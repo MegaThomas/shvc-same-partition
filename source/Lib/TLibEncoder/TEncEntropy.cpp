@@ -181,6 +181,10 @@ Void TEncEntropy::encodeSplitFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiD
   {
     uiAbsPartIdx = 0;
   }
+#if SAMEPAR
+  if (pcCU->getLayerId() != 0)
+    return;
+#endif
   m_pcEntropyCoderIf->codeSplitFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 

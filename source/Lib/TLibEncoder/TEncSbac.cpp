@@ -422,6 +422,16 @@ Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRef
 Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
+  
+#if SAMEPAR
+  if (pcCU->getLayerId() != 0) {
+    UInt uiAbsPartIdxBase;
+    TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+    assert(baseCU->getPartitionSize(uiAbsPartIdxBase) == pcCU->getPartitionSize(uiAbsPartIdx));
+    return;
+  }
+#endif
+  
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
     if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
@@ -599,6 +609,14 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   
   UInt uiCtx           = pcCU->getCtxSplitFlag( uiAbsPartIdx, uiDepth );
   UInt uiCurrSplitFlag = ( pcCU->getDepth( uiAbsPartIdx ) > uiDepth ) ? 1 : 0;
+  
+#if SAMEPAR
+  if (pcCU->getLayerId() != 0) {
+    UInt uiAbsPartIdxBase;
+    TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+    assert(baseCU->getDepth(uiAbsPartIdxBase) == pcCU->getDepth(uiAbsPartIdx));
+  }
+#endif
   
   assert( uiCtx < 3 );
   m_pcBinIf->encodeBin( uiCurrSplitFlag, m_cCUSplitFlagSCModel.get( 0, 0, uiCtx ) );

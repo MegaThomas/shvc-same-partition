@@ -183,6 +183,10 @@ public:
   TComDataCU();
   virtual ~TComDataCU();
   
+#if SAMEPAR
+  TComDataCU * my_getColBaseCU(Int uiAbsPartIdx, UInt &uiAbsPartIdxBase);
+#endif
+  
   // -------------------------------------------------------------------------------------------------------------------
   // create / destroy / initialize / copy
   // -------------------------------------------------------------------------------------------------------------------

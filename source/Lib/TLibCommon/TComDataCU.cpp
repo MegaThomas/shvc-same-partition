@@ -117,6 +117,17 @@ TComDataCU::~TComDataCU()
 {
 }
 
+#if SAMEPAR
+TComDataCU * TComDataCU::my_getColBaseCU(Int uiAbsPartIdx, UInt &uiAbsPartIdxBase) {
+  Int refLayerIdc = getSlice()->getInterLayerPredLayerIdc(0);
+  UInt uiCUAddrBase;
+  UInt pelX = getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+  UInt pelY = getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+  TComDataCU * baseCU = getBaseColCU(refLayerIdc, pelX, pelY, uiCUAddrBase, uiAbsPartIdxBase);
+  return baseCU;
+}
+#endif
+
 Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
 #if ADAPTIVE_QP_SELECTION
                         , Bool bGlobalRMARLBuffer
