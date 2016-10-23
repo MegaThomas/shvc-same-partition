@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "TEncCu::xCopyYuv2Pic(TComPic*, unsigned int, unsigned int, unsigned int, unsigned int, TComDataCU*, unsigned int, unsigned int):TEncCu.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "0x0000000112af6000">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
