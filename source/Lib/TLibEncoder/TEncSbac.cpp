@@ -1108,6 +1108,15 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
   DTRACE_CABAC_V(  pcCU->getPredictionMode( uiAbsPartIdx ) )
   DTRACE_CABAC_T( "\n" )
 
+  
+  if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+    UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+    UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+    if (PelX == 212 && PelY == 160) {
+      cout << "";
+    }
+  }
+  
   if( uiWidth > m_pcSlice->getSPS()->getMaxTrSize() )
   {
     uiWidth  = m_pcSlice->getSPS()->getMaxTrSize();
@@ -1186,6 +1195,14 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
   Int posLastX = posLast - ( posLastY << uiLog2BlockSize );
   codeLastSignificantXY(posLastX, posLastY, uiWidth, uiHeight, eTType, uiScanIdx);
   
+  if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+    UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+    UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+    if (PelX == 212 && PelY == 160) {
+      cout << "posLastX: " << posLastX << " posLastY: " << posLastY << "\n";
+    }
+  }
+  
   //===== code significance flag =====
   ContextModel * const baseCoeffGroupCtx = m_cCUSigCoeffGroupSCModel.get( 0, eTType );
   ContextModel * const baseCtx = (eTType==TEXT_LUMA) ? m_cCUSigSCModel.get( 0, 0 ) : m_cCUSigSCModel.get( 0, 0 ) + NUM_SIG_FLAG_CTX_LUMA;
@@ -1229,6 +1246,14 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
           UInt uiSigCoeffGroup   = (uiSigCoeffGroupFlag[ iCGBlkPos ] != 0);
           UInt uiCtxSig  = TComTrQuant::getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, iCGPosX, iCGPosY, uiWidth, uiHeight );
           m_pcBinIf->encodeBin( uiSigCoeffGroup, baseCoeffGroupCtx[ uiCtxSig ] );
+        
+        if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+          UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+          UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+          if (PelX == 212 && PelY == 160) {
+            cout << "iSubSet: " << iSubSet << " uiSigCoeffGroup: " << uiSigCoeffGroup << "\n";
+          }
+        }
       }
       
       // encode significant_coeff_flag
@@ -1246,6 +1271,14 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
           {
             uiCtxSig  = TComTrQuant::getSigCtxInc( patternSigCtx, uiScanIdx, uiPosX, uiPosY, uiLog2BlockSize, eTType );
             m_pcBinIf->encodeBin( uiSig, baseCtx[ uiCtxSig ] );
+            
+            if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+              UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+              UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+              if (PelX == 212 && PelY == 160) {
+                cout << "iSubSet: " << iSubSet << " uiSig: " << uiSig << "\n";
+              }
+            }
           }
           if( uiSig )
           {
@@ -1283,6 +1316,13 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
       {
         UInt uiSymbol = absCoeff[ idx ] > 1;
         m_pcBinIf->encodeBin( uiSymbol, baseCtxMod[c1] );
+        if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+          UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+          UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+          if (PelX == 212 && PelY == 160) {
+            cout << "idx: " << idx << " uiBin: " << uiSymbol << "\n";
+          }
+        }
         if( uiSymbol )
         {
           c1 = 0;
@@ -1295,6 +1335,14 @@ Void TEncSbac::codeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx
         else if( (c1 < 3) && (c1 > 0) )
         {
           c1++;
+        }
+      }
+      
+      if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+        UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+        UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+        if (PelX == 212 && PelY == 160) {
+          cout << "\n";
         }
       }
       

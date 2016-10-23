@@ -771,11 +771,12 @@ TEncSearch::xEncSubdivCbfQT( TComDataCU*  pcCU,
   UInt  uiSubdiv        = ( uiTrMode > uiTrDepth ? 1 : 0 );
   UInt  uiLog2TrafoSize = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth()] + 2 - uiFullDepth;
 
-#if 0 //SAMEPAR
+#if SAMEPAR
   if (pcCU->getLayerId() != 0) {
     UInt uiAbsPartIdxBase;
     TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
-    assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == pcCU->getTransformIdx(uiAbsPartIdx));
+    if (baseCU->getQtRootCbf(uiAbsPartIdxBase) && baseCU->getSlice()->isIntra() == pcCU->getSlice()->isIntra())
+      assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == pcCU->getTransformIdx(uiAbsPartIdx));
   }
 #endif
   
@@ -1387,6 +1388,9 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
   Bool    bCheckFull    = ( uiLog2TrSize  <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
   Bool    bCheckSplit   = ( uiLog2TrSize  >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
   
+  if (pcCU->getSlice()->getPOC() == 1 && pcCU->getAddr() == 1 && pcCU->getDepth(0) == 1 && uiTrDepth == 0 && uiAbsPartIdx == 0)
+    cout << "";
+  
 #if HHI_RQT_INTRA_SPEEDUP
   Int maxTuSize = pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize();
   Int isIntraSlice = (pcCU->getSlice()->getSliceType() == I_SLICE);
@@ -1417,18 +1421,28 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
   }
 #endif
   
-#if 0 //SAMEPAR
+#if SAMEPAR
+  static int haha = 0;
+  haha ++;
+  if (haha == 145777)
+    cout << "";
   if (pcCU->getLayerId() != 0) {
     UInt uiAbsPartIdxBase;
     TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
-    if (uiTrDepth != (int)baseCU->getTransformIdx(uiAbsPartIdxBase)) {
-      //assert(bCheckSplit);
-      bCheckFull = false;
-      bCheckSplit = true;
-    } else {
-      //assert(bCheckFull);
-      bCheckFull = true;
-      bCheckSplit = false;
+    if (baseCU->getSlice()->isIntra() == pcCU->getSlice()->isIntra()) {
+      if (uiTrDepth != (int)baseCU->getTransformIdx(uiAbsPartIdxBase)) {
+        //assert(bCheckSplit);
+        if (bCheckSplit) {
+          bCheckFull = false;
+          bCheckSplit = true;
+        }
+      } else {
+        //assert(bCheckFull);
+        if (baseCU->getQtRootCbf(uiAbsPartIdxBase)) {
+          bCheckFull = true;
+          bCheckSplit = false;
+        }
+      }
     }
   }
 #endif
@@ -4579,6 +4593,14 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   UInt      uiWidth      = pcCU->getWidth ( 0 );
   UInt      uiHeight     = pcCU->getHeight( 0 );
   
+  if (pcCU->getSlice()->getPOC() == 29 && pcCU->getLayerId() == 0 && pcCU->getDepth(0) == 0) {
+    UInt PelX = pcCU->getCUPelX();
+    UInt PelY = pcCU->getCUPelY();
+    if (PelX == 128 && PelY == 0) {
+      cout << "";
+    }
+  }
+  
   //  No residual coding : SKIP mode
   if ( bSkipRes )
   {
@@ -4794,18 +4816,29 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
   
   assert( bCheckFull || bCheckSplit );
   
-#if 0 //SAMEPAR
+#if SAMEPAR
+  // If the 64x64 is skipped, the trmidx is set to 0
+  // We should recognize this condition here
+  
   if (pcCU->getLayerId() != 0) {
     UInt uiAbsPartIdxBase;
     TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
     if (uiTrMode != baseCU->getTransformIdx(uiAbsPartIdxBase)) {
-      assert(bCheckSplit);
-      bCheckFull = false;
-      bCheckSplit = true;
+      //assert(bCheckSplit);
+      if (bCheckSplit) {
+        bCheckFull = false;
+        bCheckSplit = true;
+      } else {
+        cout << "";
+      }
     } else {
-      assert(bCheckFull);
-      bCheckFull = true;
-      bCheckSplit = false;
+      if (bCheckFull) {
+        //assert(bCheckFull);
+        bCheckFull = true;
+        bCheckSplit = false;
+      } else {
+        cout << "";
+      }
     }
   }
 #endif
@@ -5547,11 +5580,12 @@ Void TEncSearch::xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const U
   const UInt uiCurrTrMode = uiDepth - pcCU->getDepth( 0 );
   const UInt uiTrMode = pcCU->getTransformIdx( uiAbsPartIdx );
   
-#if 0 //SAMEPAR
+#if SAMEPAR
   if (pcCU->getLayerId() != 0) {
     UInt uiAbsPartIdxBase;
     TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
-    assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == pcCU->getTransformIdx(uiAbsPartIdx));
+    if (baseCU->getQtRootCbf(uiAbsPartIdxBase) && baseCU->getSlice()->isIntra() == pcCU->getSlice()->isIntra())
+      assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == pcCU->getTransformIdx(uiAbsPartIdx));
   }
 #endif
   

@@ -321,6 +321,14 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     pcCU->setSizeSubParts      ( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
     pcCU->setTrIdxSubParts     ( 0, uiAbsPartIdx, uiDepth );
     pcCU->setIPCMFlagSubParts  ( bIpcmFlag, uiAbsPartIdx, uiDepth );
+      
+#if SAMEPAR
+    if (pcCU->getLayerId() != 0) {
+      UInt uiAbsPartIdxBase;
+      TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+      assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == 0);
+    }
+#endif
 
     UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
     UInt uiLumaOffset   = uiMinCoeffSize*uiAbsPartIdx;
@@ -560,6 +568,17 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     UInt uiWidthInBit  = g_aucConvertToBit[pcCU->getWidth(uiAbsPartIdx)]+2;
     UInt uiTrSizeInBit = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxTrSize()]+2;
     uiTrLevel          = uiWidthInBit >= uiTrSizeInBit ? uiWidthInBit - uiTrSizeInBit : 0;
+#if SAMEPAR
+    if (pcCU->getLayerId() != 0) {
+      UInt uiAbsPartIdxBase;
+      TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+      pcCU->setTrIdxSubParts( baseCU->getTransformIdx(uiAbsPartIdxBase), uiAbsPartIdx, uiDepth );
+/*      if (eMode == SIZE_NxN)
+        assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == uiTrLevel + 1);
+      else
+        assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == uiTrLevel);*/
+    } else {
+#endif
     if( eMode == SIZE_NxN )
     {
       pcCU->setTrIdxSubParts( 1+uiTrLevel, uiAbsPartIdx, uiDepth );
@@ -568,6 +587,9 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     {
       pcCU->setTrIdxSubParts( uiTrLevel, uiAbsPartIdx, uiDepth );
     }
+#if SAMEPAR
+  }
+#endif
   }
   else
   {
@@ -1119,6 +1141,14 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
   parseLastSignificantXY( uiPosLastX, uiPosLastY, uiWidth, uiHeight, eTType, uiScanIdx );
   UInt uiBlkPosLast      = uiPosLastX + (uiPosLastY<<uiLog2BlockSize);
   pcCoef[ uiBlkPosLast ] = 1;
+  
+  if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+    UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+    UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+    if (PelX == 212 && PelY == 160) {
+      cout << "posLastX: " << uiPosLastX << " posLastY: " << uiPosLastY << "\n";
+    }
+  }
 
   //===== decode significance flags =====
   UInt uiScanPosLast;
@@ -1198,6 +1228,14 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
       UInt uiCtxSig  = TComTrQuant::getSigCoeffGroupCtxInc( uiSigCoeffGroupFlag, iCGPosX, iCGPosY, uiWidth, uiHeight );
       m_pcTDecBinIf->decodeBin( uiSigCoeffGroup, baseCoeffGroupCtx[ uiCtxSig ] );
       uiSigCoeffGroupFlag[ iCGBlkPos ] = uiSigCoeffGroup;
+      
+      if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+        UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+        UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+        if (PelX == 212 && PelY == 160) {
+          cout << "iSubSet: " << iSubSet << " uiSigCoeffGroup: " << uiSigCoeffGroup << "\n";
+        }
+      }
     }
 
     // decode significant_coeff_flag
@@ -1216,6 +1254,13 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
         {
           uiCtxSig  = TComTrQuant::getSigCtxInc( patternSigCtx, uiScanIdx, uiPosX, uiPosY, uiLog2BlockSize, eTType );
           m_pcTDecBinIf->decodeBin( uiSig, baseCtx[ uiCtxSig ] );
+          if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+            UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+            UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+            if (PelX == 212 && PelY == 160) {
+              cout << "iSubSet: " << iSubSet << " uiSig: " << uiSig << "\n";
+            }
+          }
         }
         else
         {
@@ -1256,6 +1301,13 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
       for( Int idx = 0; idx < numC1Flag; idx++ )
       {
         m_pcTDecBinIf->decodeBin( uiBin, baseCtxMod[c1] );
+        if (pcCU->getSlice()->getPOC() == 28 && pcCU->getLayerId() != 0) {
+          UInt PelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+          UInt PelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+          if (PelX == 212 && PelY == 160) {
+            cout << "idx: " << idx << " uiBin: " << uiBin << "\n";
+          }
+        }
         if( uiBin == 1 )
         {
           c1 = 0;

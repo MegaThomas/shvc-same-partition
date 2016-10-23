@@ -906,6 +906,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         if(!m_pcEncCfg->getUseEarlySkipDetection())
         {
           // 2Nx2N, NxN
+          if (rpcBestCU->getSlice()->getPOC() == 29 && rpcBestCU->getLayerId() == 0 && rpcBestCU->getDepth(0) == 0) {
+            UInt PelX = rpcBestCU->getCUPelX();
+            UInt PelY = rpcBestCU->getCUPelY();
+            if (PelX == 128 && PelY == 0) {
+              cout << "";
+            }
+          }
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
           if(m_pcEncCfg->getUseCbfFastMode())

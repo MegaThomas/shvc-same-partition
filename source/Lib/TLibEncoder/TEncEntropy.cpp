@@ -234,7 +234,17 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
   UInt cbfY = pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA    , uiTrIdx );
   UInt cbfU = pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrIdx );
   UInt cbfV = pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrIdx );
-
+  
+#if SAMEPAR
+  if (pcCU->getLayerId() != 0) {
+    UInt uiAbsPartIdxBase;
+    TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+    if (baseCU->getQtRootCbf(uiAbsPartIdxBase) && baseCU->getSlice()->isIntra() == pcCU->getSlice()->isIntra())
+      assert(pcCU->getTransformIdx(uiAbsPartIdx) == baseCU->getTransformIdx(uiAbsPartIdxBase));
+    assert(pcCU->getDepth(uiAbsPartIdx) == baseCU->getDepth(uiAbsPartIdxBase));
+  }
+#endif
+  
   if(uiTrIdx==0)
   {
     m_bakAbsPartIdxCU = uiAbsPartIdx;

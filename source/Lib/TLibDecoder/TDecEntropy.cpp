@@ -421,6 +421,14 @@ Void TDecEntropy::xDecodeTransform( TComDataCU* pcCU, UInt offsetLuma, UInt offs
   }
   else
   {
+#if SAMEPAR
+    if (pcCU->getLayerId() != 0) {
+      UInt uiAbsPartIdxBase;
+      TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+      if (baseCU->getQtRootCbf(uiAbsPartIdxBase) && baseCU->getSlice()->isIntra() == pcCU->getSlice()->isIntra())
+        assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == uiTrDepth);
+    }
+#endif
     assert( uiDepth >= pcCU->getDepth( uiAbsPartIdx ) );
     pcCU->setTrIdxSubParts( uiTrDepth, uiAbsPartIdx, uiDepth );
     
@@ -546,6 +554,13 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     }
     if ( !uiQtRootCbf )
     {
+#if 0  //SAMEPAR
+      if (pcCU->getLayerId() != 0) {
+        UInt uiAbsPartIdxBase;
+        TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+        assert(baseCU->getTransformIdx(uiAbsPartIdxBase) == 0);
+      }
+#endif
       pcCU->setCbfSubParts( 0, 0, 0, uiAbsPartIdx, uiDepth );
       pcCU->setTrIdxSubParts( 0 , uiAbsPartIdx, uiDepth );
       return;
