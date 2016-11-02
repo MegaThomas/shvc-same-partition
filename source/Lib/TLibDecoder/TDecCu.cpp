@@ -260,16 +260,16 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     UInt uiAbsPartIdxBase;
     TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
     my_depth = baseCU->getDepth(uiAbsPartIdxBase);
-    //pcCU->setDepthSubParts( my_depth, uiAbsPartIdx );
-    
-    if (!bBoundary) {
-      if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
-        pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx );
-      else if (my_depth > uiDepth)
-        pcCU->setDepthSubParts( uiDepth+1, uiAbsPartIdx );
-      else
-        pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx );
-    }
+   // //pcCU->setDepthSubParts( my_depth, uiAbsPartIdx );
+   // 
+   // if (!bBoundary) {
+   //   if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+   //     pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx );
+   //   else if (my_depth > uiDepth)
+   //     pcCU->setDepthSubParts( uiDepth+1, uiAbsPartIdx );
+   //   else
+   //     pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx );
+   // }
   } else {
     my_depth = pcCU->getDepth(uiAbsPartIdx);
   }

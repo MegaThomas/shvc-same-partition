@@ -615,6 +615,7 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
     UInt uiAbsPartIdxBase;
     TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
     assert(baseCU->getDepth(uiAbsPartIdxBase) == pcCU->getDepth(uiAbsPartIdx));
+    return;
   }
 #endif
   

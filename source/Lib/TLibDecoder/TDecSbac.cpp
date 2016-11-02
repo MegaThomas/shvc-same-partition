@@ -514,8 +514,16 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
   
 #if SAMEPAR
-  if (pcCU->getLayerId() != 0)
+  if (pcCU->getLayerId() != 0){
+    UInt uiAbsPartIdxBase;
+    TComDataCU * baseCU = pcCU->my_getColBaseCU(uiAbsPartIdx, uiAbsPartIdxBase);
+    Int my_depth = baseCU->getDepth(uiAbsPartIdxBase);
+    if (my_depth > uiDepth)
+      pcCU->setDepthSubParts( uiDepth+1, uiAbsPartIdx  );
+    else
+      pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx  );
     return;
+  }
 #endif
   UInt uiSymbol;
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSplitFlagSCModel.get( 0, 0, pcCU->getCtxSplitFlag( uiAbsPartIdx, uiDepth ) ) );
